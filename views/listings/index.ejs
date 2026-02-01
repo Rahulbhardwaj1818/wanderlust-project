@@ -1,24 +1,35 @@
 <% layout("/layouts/boilerplate") %>
     
 <style>
+  .filters-container {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 1rem; 
+  }
   .filters{
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     gap: 2rem;
-    margin-top: 1rem;
+    flex-grow: 1;
+    overflow-x: auto; /* Allows scrolling if needed on small desktops too */
+  }
+  .filters::-webkit-scrollbar {
+    display: none;
   }
   .filter{
     text-align: center;
-    margin-top: 2rem;
     opacity: 0.7;
     text-decoration: none;
     color: inherit;
     cursor: pointer;
+    flex-shrink: 0; /* Prevents shrinking */
+    transition: all 0.3s ease;
   }
   .filter:hover, .filter.active {
     opacity: 1;
-    border-bottom: 2px solid black;
+    border-bottom: 2px solid #fe424d;
+    transform: scale(1.05);
   }
   .filter p {
     font-size: 0.8rem;
@@ -39,6 +50,12 @@
   .listing-card {
     border: none !important;
     margin-bottom: 2rem;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  .listing-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    border-radius: 1rem;
   }
   .card-img-top {
     border-radius: 1rem !important;
@@ -55,37 +72,55 @@
   
   /* Mobile Responsiveness */
   @media (max-width: 768px) {
+    .filters-container {
+      flex-direction: column;
+      align-items: stretch;
+    }
     .filters {
       flex-wrap: nowrap;
-      overflow-x: auto;
       padding-bottom: 1rem;
       gap: 1rem;
-      padding-left: 1rem;
-      padding-right: 1rem;
-      margin-top: 0.5rem;
-    }
-    .filters::-webkit-scrollbar {
-      display: none;
+      width: 100%;
     }
     .filter {
       margin-right: 1rem;
-      margin-top: 0.5rem;
-      flex-shrink: 0;
     }
     .tax-toggle {
-      display: flex;
-      margin-left: 0;
-      flex-shrink: 0;
-      height: 2.5rem;
-      padding: 0.5rem 0.75rem;
-      font-size: 0.8rem;
+      display: none;
     }
     .card-img-top {
       height: 18rem;
     }
   }
+  .filter-section {
+    margin-bottom: 1.5rem;
+  }
+  .filter-section h6 {
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+  .mobile-search-bar {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 2rem;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  }
+
 </style>
 
+<!-- Mobile Search Bar -->
+<div class="d-md-none mt-3 mb-3 d-flex align-items-center mobile-search-bar">
+  <form action="/listings" method="GET" class="flex-grow-1 me-2 d-flex">
+    <input type="text" class="form-control border-0 shadow-none" name="search" placeholder="Search destinations..." aria-label="Search destinations">
+    <button class="btn btn-danger rounded-circle" type="submit" style="width: 35px; height: 35px; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-magnifying-glass" style="font-size: 0.8rem;"></i></button>
+  </form>
+  <button class="btn btn-light rounded-circle border ms-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileFilters" aria-controls="mobileFilters" style="width: 35px; height: 35px; padding: 0;">
+    <i class="fa-solid fa-sliders"></i>
+  </button>
+</div>
+
+<div class="filters-container">
 <div class="filters">
   <% if (typeof filters !== 'undefined' && filters.length > 0) { %>
     <% filters.forEach(filter => { %>
@@ -95,7 +130,8 @@
       </a>
     <% }) %>
   <% } %>
-  
+</div>
+
 <div class="tax-toggle">
 <div class="form-check-reverse form-switch">
   <input class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault">
@@ -106,8 +142,11 @@
 
 <div class="row row-cols-lg-3 row-cols-md-2 row-cols-1 mt-3">
   <% if(allListings.length == 0){ %>
-    <div class="alert alert-danger col-12" role="alert">
-      No listings found for this search or category.
+    <div class="col-12 text-center mt-5 mb-5">
+      <i class="fa-solid fa-magnifying-glass-location fa-3x text-muted mb-3"></i>
+      <h3>No listings found</h3>
+      <p class="text-muted">Try adjusting your search or filters to find what you're looking for.</p>
+      <a href="/listings" class="btn btn-danger mt-2">Clear all filters</a>
     </div>
   <% } %>
   <% for (let listing of allListings) { %>
@@ -123,8 +162,22 @@
    </div>
   <div class="card-body">
     <p class="card-text">
-      <b>  <%= listing.title %></b><br>
-       &#8377 <%= listing.price.toLocaleString("en-IN") %>/night
+      <span class="fw-bold text-dark"><%= listing.title %></span><br>
+      <% if(listing.roomType) { %>
+        <small class="text-muted"><%= listing.roomType.replace(/_/g, ' ') %></small><br>
+      <% } %>
+      <% if(listing.guests || listing.bedrooms || listing.beds || listing.bathrooms) { %>
+        <small class="text-muted" style="font-size: 0.75rem;">
+          <%= listing.guests ? listing.guests + ' guests' : '' %> 
+          <%= listing.bedrooms ? ' • ' + listing.bedrooms + ' bedrooms' : '' %>
+          <%= listing.beds ? ' • ' + listing.beds + ' beds' : '' %>
+          <%= listing.bathrooms ? ' • ' + listing.bathrooms + ' baths' : '' %>
+        </small><br>
+      <% } %>
+      <% if(listing.amenities && listing.amenities.length > 0) { %>
+        <small class="text-muted" style="font-size: 0.75rem;"><%= listing.amenities.slice(0, 3).join(" • ") %></small><br>
+      <% } %>
+       <span class="fw-bold">&#8377;<%= listing.price.toLocaleString("en-IN") %></span> <span class="text-muted fw-light">/ night</span>
          <i class="tax-info">&nbsp; &nbsp; +18%GST</i>
     </p>
   </div>
@@ -133,17 +186,135 @@
    <% } %>
 </div>
 
+<!-- Mobile Filters Offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="mobileFilters" aria-labelledby="mobileFiltersLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="mobileFiltersLabel">Filters</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+    <form action="/listings" method="GET">
+    <div class="filter-section">
+      <h6>Display Options</h6>
+      <div class="form-check-reverse form-switch d-flex justify-content-between align-items-center ps-0">
+        <label class="form-check-label" for="switchCheckMobile">Display Taxes</label>
+        <input class="form-check-input" type="checkbox" role="switch" id="switchCheckMobile">
+      </div>
+    </div>
+    <hr>
+    
+    <div class="filter-section">
+      <h6>Price Range</h6>
+      <div class="d-flex align-items-center gap-2">
+        <div class="form-floating flex-grow-1">
+          <input type="number" class="form-control" id="minPrice" name="minPrice" placeholder="Min">
+          <label for="minPrice">Min Price</label>
+        </div>
+        <span>-</span>
+        <div class="form-floating flex-grow-1">
+          <input type="number" class="form-control" id="maxPrice" name="maxPrice" placeholder="Max">
+          <label for="maxPrice">Max Price</label>
+        </div>
+      </div>
+    </div>
+    <hr>
+
+    <div class="filter-section">
+      <h6>Type of place</h6>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="entire_home" id="typeEntire" name="roomType">
+        <label class="form-check-label" for="typeEntire">Entire home</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="private_room" id="typePrivate" name="roomType">
+        <label class="form-check-label" for="typePrivate">Private room</label>
+      </div>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="shared_room" id="typeShared" name="roomType">
+        <label class="form-check-label" for="typeShared">Shared room</label>
+      </div>
+    </div>
+    <hr>
+
+    <div class="filter-section">
+      <h6>Rooms and Beds</h6>
+      <div class="row g-2">
+        <div class="col-6">
+          <label for="bedrooms" class="form-label small">Bedrooms</label>
+          <input type="number" class="form-control" id="bedrooms" name="bedrooms" min="0" placeholder="Any">
+        </div>
+        <div class="col-6">
+          <label for="beds" class="form-label small">Beds</label>
+          <input type="number" class="form-control" id="beds" name="beds" min="0" placeholder="Any">
+        </div>
+        <div class="col-6">
+          <label for="bathrooms" class="form-label small">Bathrooms</label>
+          <input type="number" class="form-control" id="bathrooms" name="bathrooms" min="0" placeholder="Any">
+        </div>
+         <div class="col-6">
+          <label for="guests" class="form-label small">Guests</label>
+          <input type="number" class="form-control" id="guests" name="guests" min="1" placeholder="Any">
+        </div>
+      </div>
+    </div>
+    <hr>
+
+    <div class="filter-section">
+      <h6>Amenities</h6>
+      <div class="row row-cols-2 g-2">
+        <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="amenities" value="wifi" id="amWifi"><label class="form-check-label" for="amWifi">Wifi</label></div></div>
+        <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="amenities" value="kitchen" id="amKitchen"><label class="form-check-label" for="amKitchen">Kitchen</label></div></div>
+        <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="amenities" value="ac" id="amAC"><label class="form-check-label" for="amAC">AC</label></div></div>
+        <div class="col"><div class="form-check"><input class="form-check-input" type="checkbox" name="amenities" value="pool" id="amPool"><label class="form-check-label" for="amPool">Pool</label></div></div>
+      </div>
+    </div>
+    <hr>
+
+    <div class="filter-section">
+      <h6>Categories</h6>
+      <div class="d-flex flex-wrap gap-2 mt-3">
+        <% if (typeof filters !== 'undefined' && filters.length > 0) { %>
+          <% filters.forEach(filter => { %>
+            <div class="form-check form-check-inline m-0">
+              <input type="radio" class="btn-check" name="category" id="cat_<%= filter.title %>" value="<%= filter.title %>" autocomplete="off">
+              <label class="btn btn-outline-secondary btn-sm rounded-pill mb-2" for="cat_<%= filter.title %>">
+              <%= filter.title %>
+              </label>
+            </div>
+          <% }) %>
+        <% } %>
+      </div>
+    </div>
+    
+    <div class="mt-4 d-grid gap-2">
+      <button type="submit" class="btn btn-danger btn-lg">Show Listings</button>
+      <button type="reset" class="btn btn-outline-secondary">Clear all</button>
+      <hr>
+      <a href="/listings/new" class="btn btn-outline-dark">
+        <i class="fa-solid fa-plus me-2"></i> List your home
+      </a>
+    </div>
+    </form>
+  </div>
+</div>
+
 <script>
-  let taxSwitch=document.getElementById("switchCheckDefault");
-  taxSwitch.addEventListener("click",()=>{
-    let taxInfo=document.getElementsByClassName("tax-info");
-    for(info of taxInfo){
-      if(info.style.display !="inline"){
-        info.style.display="inline";
-      }else{
-info.style.display="none";
+  let taxSwitches = document.querySelectorAll("#switchCheckDefault, #switchCheckMobile");
+  
+  taxSwitches.forEach((toggle) => {
+    toggle.addEventListener("click", () => {
+      let taxInfo = document.getElementsByClassName("tax-info");
+      // Sync other toggles
+      taxSwitches.forEach(t => { if(t !== toggle) t.checked = toggle.checked; });
+      
+      for (info of taxInfo) {
+        if (info.style.display != "inline") {
+          info.style.display = "inline";
+        } else {
+          info.style.display = "none";
+        }
       }
-    }
+    });
   });
 </script>  
 
