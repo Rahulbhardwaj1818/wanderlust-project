@@ -28,8 +28,9 @@ const dbUrl=process.env.ATLASDB_URL;
 
 main().then(()=>{
     console.log('Connected to MongoDB');
-    app.listen(8080,()=>{
-        console.log('Server is running on port 8080');
+    const port = process.env.PORT || 8080;
+    app.listen(port,()=>{
+        console.log(`Server is running on port ${port}`);
     });
 })
 .catch(err=>{
@@ -97,6 +98,20 @@ app.use((req,res,next)=>{
 res.locals.success=req.flash('success');
 res.locals.error=req.flash("error");
 res.locals.currentUser=req.user;
+res.locals.filters = [
+    { title: "All", icon: "fa-compass" },
+    { title: "Trending", icon: "fa-fire" },
+    { title: "Rooms", icon: "fa-bed" },
+    { title: "Iconic Cities", icon: "fa-mountain-city" },
+    { title: "Mountains", icon: "fa-mountain" },
+    { title: "Castles", icon: "fa-fort-awesome" },
+    { title: "Amazing Pools", icon: "fa-person-swimming" },
+    { title: "Camping", icon: "fa-campground" },
+    { title: "Farms", icon: "fa-cow" },
+    { title: "Arctic", icon: "fa-snowflake" },
+    { title: "Domes", icon: "fa-igloo" },
+    { title: "Boats", icon: "fa-ship" }
+];
 next();
 });
 

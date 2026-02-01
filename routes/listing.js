@@ -12,7 +12,29 @@ const upload = multer({ storage});
 
 
 router.route("/")
-.get( wrapAsync(listingController.index) )
+.get(wrapAsync(async (req, res, next) => {
+    const { category, search } = req.query;
+    if (category && category !== "All") {
+        const allListings = await Listing.find({ category });
+        res.render("listings/index.ejs", { allListings, category });
+    } else if (search) {
+        const allListings = await Listing.find({
+            $or: [
+                { title: { $regex: search, $options: "i" } },
+                { location: { $regex: search, $options: "i" } },
+                { country: { $regex: search, $options: "i" } }
+            ]
+        });
+        res.render("listings/index.ejs", { allListings, search });
+    } else {
+        if (category === "All") {
+            const allListings = await Listing.find({});
+            res.render("listings/index.ejs", { allListings, category });
+        } else {
+            await listingController.index(req, res, next);
+        }
+    }
+}))
 .post(isLoggedIn, validateListing,upload.single('listing[image]'), wrapAsync(listingController.createListing));
 
 //new route
