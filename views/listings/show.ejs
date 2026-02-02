@@ -4,13 +4,28 @@
   .offcanvas {
     background-color: #fff !important;
   }
+  .review-card .card-body {
+    padding: 0.5rem !important;
+  }
   @media (max-width: 768px) {
     .review-card .card-body {
       overflow: hidden;
+      padding: 0.35rem !important;
     }
     .starability-result {
-      transform: scale(0.85);
+      transform: scale(0.75);
       transform-origin: left top;
+      margin-bottom: 0.2rem;
+    }
+    .review-card {
+      font-size: 0.85rem;
+    }
+    .review-card .card-title {
+      font-size: 0.95rem;
+      margin-bottom: 0.2rem;
+    }
+    .review-card p {
+      margin-bottom: 0.2rem;
     }
     /* Fix for mobile navigation menu overlay */
     .navbar-collapse {
@@ -42,7 +57,7 @@
 </script>
 
 
-<div class="row mt-3">
+<div class="row mt-3 px-3 px-md-0">
     <div class="col-12 col-md-8 offset-md-3">
     <h3><%=listing.title %> </h3>
     </div>
@@ -95,7 +110,7 @@
 
 <div class="mb-3 mt-3">
   <label for="comment" class="form-label">Comment</label>
-  <textarea id="comment" name="review[comment]" rows="5" cols="30" class="form-control" required></textarea>
+  <textarea id="comment" name="review[comment]" rows="3" cols="30" class="form-control" required></textarea>
   <div class="invalid-feedback">Please enter a some comment for review</div><br>
 
 
@@ -107,23 +122,22 @@
 <% } %>
 
 <% if(listing.reviews.length > 0) { %>
-<div class="row">
-<p><b>All Reviews</b></p>
+<div class="row g-3">
+  <div class="col-12"><p><b>All Reviews</b></p></div>
   <% for(let review of listing.reviews){ %>
-    <div class="card col-12 col-md-5 ms-md-3 mb-3 review-card">
-  <div class="card-body">
-    <h5 class="card-title"><%=review.author.username%></h5>
-    <p class="starability-result card-text" data-rating="<%=review.rating%>"></p>
-
-    <p class="card-text"><%=review.comment %></p>
-
-<form action="/listings/<%=listing._id%>/reviews/<%=review._id%>?_method=DELETE" class="mb-3" method="POST">
-  <button class="btn btn-sm btn-dark">Delete</button>
-
-</form>
-  </div>
-     </div>
-        <%} %>
+    <div class="col-md-6">
+      <div class="card review-card">
+        <div class="card-body">
+          <h5 class="card-title"><%=review.author.username%></h5>
+          <p class="starability-result card-text" data-rating="<%=review.rating%>"></p>
+          <p class="card-text"><%=review.comment %></p>
+          <form action="/listings/<%=listing._id%>/reviews/<%=review._id%>?_method=DELETE" class="mb-1" method="POST">
+            <button class="btn btn-sm btn-dark">Delete</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  <% } %>
 </div>
     <%} %>
 </div>
